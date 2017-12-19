@@ -1,25 +1,29 @@
-package co.uk.app.commerce.user.bean;
+package co.uk.app.commerce.user.document;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.springframework.data.annotation.Transient;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@Document(collection = "address")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Address implements Serializable {
 
 	private static final long serialVersionUID = -5755601784422563642L;
 
+	@Id
+	private String id;
+	
 	@Field(value = "address_id")
 	@JsonProperty("address_id")
 	private Long addressId;
 
-	@Transient
 	@JsonProperty("users_id")
 	private Long usersId;
 
@@ -237,6 +241,14 @@ public class Address implements Serializable {
 
 	public void setLastcreate(String lastcreate) {
 		this.lastcreate = lastcreate;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
 	}
 
 	@Override
