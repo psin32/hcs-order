@@ -13,7 +13,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @SpringBootApplication
 @ComponentScan({ "co.uk.app.commerce.order", "co.uk.app.commerce.kafka" })
-@EnableMongoRepositories(basePackages = { "co.uk.app.commerce.order", "co.uk.app.commerce.catalog", "co.uk.app.commerce.user" })
+@EnableMongoRepositories(basePackages = { "co.uk.app.commerce.order", "co.uk.app.commerce.catalog", "co.uk.app.commerce.address" })
 public class OrderApplication {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrderApplication.class);

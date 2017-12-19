@@ -1,4 +1,4 @@
-package co.uk.app.commerce.user.document;
+package co.uk.app.commerce.address.document;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;

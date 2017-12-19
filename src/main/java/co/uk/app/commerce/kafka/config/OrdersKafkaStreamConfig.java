@@ -13,7 +13,8 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KeyValueMapper;
-import org.apache.kafka.streams.kstream.Printed;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -26,9 +27,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import co.uk.app.commerce.user.bean.KafkaAddressResponse;
-import co.uk.app.commerce.user.document.Address;
-import co.uk.app.commerce.user.repository.AddressRepository;
+import co.uk.app.commerce.address.bean.KafkaAddressResponse;
+import co.uk.app.commerce.address.document.Address;
+import co.uk.app.commerce.address.repository.AddressRepository;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import io.confluent.kafka.streams.serdes.avro.GenericAvroSerde;
 
@@ -37,6 +38,8 @@ import io.confluent.kafka.streams.serdes.avro.GenericAvroSerde;
 @EnableKafkaStreams
 public class OrdersKafkaStreamConfig {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(OrdersKafkaStreamConfig.class);
+	
 	@Value("${kafka.config.bootstrap.servers}")
 	private String bootstrapServers;
 
@@ -84,7 +87,6 @@ public class OrdersKafkaStreamConfig {
 
 	private KStream<String, GenericRecord> readAddressStream(final StreamsBuilder builder) {
 		KStream<String, GenericRecord> addressStream = builder.stream(addressTopic);
-		addressStream.print(Printed.toSysOut());
 		addressStream
 				.map(new KeyValueMapper<String, GenericRecord, KeyValue<? extends String, ? extends GenericRecord>>() {
 
@@ -102,10 +104,14 @@ public class OrdersKafkaStreamConfig {
 								Address savedAddress = addressRepository.findByAddressId(address.getAddressId());
 								if (null != savedAddress) {
 									address.setId(savedAddress.getId());
+									LOGGER.info("Address update received for usersId - {}, and addressId - {}", address.getUsersId(), address.getAddressId());
+								} else {
+									LOGGER.info("New address created for usersId - {}, and addressId - {}", address.getUsersId(), address.getAddressId());
 								}
 								addressRepository.save(address);
 							}
 						} catch (Exception e) {
+							LOGGER.error("Error occured while parsing address response", e);
 							throw new SerializationException(e);
 						}
 

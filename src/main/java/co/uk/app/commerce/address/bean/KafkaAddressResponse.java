@@ -1,8 +1,8 @@
-package co.uk.app.commerce.user.bean;
+package co.uk.app.commerce.address.bean;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import co.uk.app.commerce.user.document.Address;
+import co.uk.app.commerce.address.document.Address;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class KafkaAddressResponse {

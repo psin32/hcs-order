@@ -1,10 +1,10 @@
-package co.uk.app.commerce.user.repository;
+package co.uk.app.commerce.address.repository;
 
 import java.util.List;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-import co.uk.app.commerce.user.document.Address;
+import co.uk.app.commerce.address.document.Address;
 
 public interface AddressRepository extends MongoRepository<Address, String> {
 
