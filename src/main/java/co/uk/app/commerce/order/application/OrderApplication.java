@@ -6,14 +6,18 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @SpringBootApplication
-@ComponentScan({ "co.uk.app.commerce.order", "co.uk.app.commerce.kafka" })
-@EnableMongoRepositories(basePackages = { "co.uk.app.commerce.order", "co.uk.app.commerce.catalog", "co.uk.app.commerce.address" })
+@ComponentScan({ "co.uk.app.commerce.order", "co.uk.app.commerce.basket", "co.uk.app.commerce.address",
+		"co.uk.app.commerce.summary", "co.uk.app.commerce.delivery", "co.uk.app.commerce.kafka" })
+@EnableMongoRepositories(basePackages = { "co.uk.app.commerce.order", "co.uk.app.commerce.catalog",
+		"co.uk.app.commerce.basket", "co.uk.app.commerce.address", "co.uk.app.commerce.summary" })
+@EnableMongoAuditing
 public class OrderApplication {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrderApplication.class);

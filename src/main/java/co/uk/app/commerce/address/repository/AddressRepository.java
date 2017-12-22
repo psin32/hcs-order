@@ -11,6 +11,8 @@ public interface AddressRepository extends MongoRepository<Address, String> {
 	Address findByAddressId(Long addressId);
 
 	List<Address> findByUsersId(Long usersId);
+	
+	List<Address> findByUsersIdAndStatusAndSelfaddress(Long usersId, String status, Integer selfaddress);
 
 	List<Address> findByUsersIdAndAddresstype(Long usersId, String addresstype);
 }
