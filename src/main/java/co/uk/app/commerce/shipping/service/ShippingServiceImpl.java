@@ -5,6 +5,10 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import co.uk.app.commerce.address.document.Address;
+import co.uk.app.commerce.order.constant.OrderConstants;
+import co.uk.app.commerce.order.document.Orders;
+import co.uk.app.commerce.order.repository.OrdersRepository;
 import co.uk.app.commerce.shipping.document.Shipping;
 import co.uk.app.commerce.shipping.repository.ShippingRepository;
 
@@ -13,6 +17,9 @@ public class ShippingServiceImpl implements ShippingService {
 
 	@Autowired
 	private ShippingRepository shippingRepository;
+
+	@Autowired
+	private OrdersRepository ordersRepository;
 
 	@Override
 	public Shipping save(Shipping shipping) {
@@ -35,6 +42,18 @@ public class ShippingServiceImpl implements ShippingService {
 	@Override
 	public List<Shipping> getActiveShippingForCurrentOrder(Long usersId) {
 		String type = null;
+		Orders orders = ordersRepository.findByUsersIdAndStatus(usersId, OrderConstants.ORDER_STATUS_PENDING);
+		if (null != orders) {
+			Address shippingAddress = orders.getShippingaddress();
+			if (null != shippingAddress) {
+				String country = shippingAddress.getCountry();
+				if (null != country && country.equalsIgnoreCase("United Kingdom")) {
+					type = OrderConstants.SHIPPING_TYPE_UK;
+				} else {
+					type = OrderConstants.SHIPPING_TYPE_NONUK;
+				}
+			}
+		}
 		return shippingRepository.findByTypeAndActiveIsTrue(type);
 	}
 

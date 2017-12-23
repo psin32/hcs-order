@@ -1,8 +1,5 @@
 package co.uk.app.commerce.order.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -23,19 +20,11 @@ public class OrdersServiceImpl implements OrdersService {
 	private OrdersRepository ordersRepository;
 
 	@Override
-	public List<Address> getActiveShippingAddresses(Long usersId) {
-		return addressRepository
-				.findByUsersIdAndStatusAndSelfaddress(usersId, OrderConstants.ADDRESS_ACTIVE_STATUS,
-						OrderConstants.NON_SELFADDRESS)
-				.stream().filter(address -> address.getAddresstype().contains(OrderConstants.ADDRESS_SHIPPING_TYPE))
-				.collect(Collectors.toList());
-	}
-
-	@Override
 	public Orders saveDeliveryOption(Long usersId, OrderType orderType) {
 		Orders orders = ordersRepository.findByUsersIdAndStatus(usersId, OrderConstants.ORDER_STATUS_PENDING);
-		if(null != orders) {
+		if (null != orders) {
 			orders.setOrdertype(orderType);
+			orders.setShippingaddress(null);
 			orders = ordersRepository.save(orders);
 		}
 		return orders;
@@ -50,4 +39,14 @@ public class OrdersServiceImpl implements OrdersService {
 		return orders;
 	}
 
+	@Override
+	public Orders saveDeliveryAddress(Long usersId, Address address) {
+		Address shippingAddress = addressRepository.findByUsersIdAndAddressId(usersId, address.getAddressId());
+		if (null == shippingAddress) {
+			shippingAddress = address;
+		}
+		Orders orders = ordersRepository.findByUsersIdAndStatus(usersId, OrderConstants.ORDER_STATUS_PENDING);
+		orders.setShippingaddress(shippingAddress);
+		return ordersRepository.save(orders);
+	}
 }

@@ -9,6 +9,10 @@ public interface OrderConstants {
 	String ADDRESS_SHIPPING_TYPE = "S";
 
 	Integer NON_SELFADDRESS = 0;
-	
+
 	String ORDER_STATUS_PENDING = "P";
+
+	String SHIPPING_TYPE_UK = "UK";
+
+	String SHIPPING_TYPE_NONUK = "NONUK";
 }
