@@ -15,7 +15,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @SpringBootApplication
 @ComponentScan({ "co.uk.app.commerce.order", "co.uk.app.commerce.basket", "co.uk.app.commerce.address",
 		"co.uk.app.commerce.summary", "co.uk.app.commerce.delivery", "co.uk.app.commerce.shipping",
-		"co.uk.app.commerce.kafka" })
+		"co.uk.app.commerce.kafka", "co.uk.app.commerce.payment", "co.uk.app.commerce.additem" })
 @EnableMongoRepositories(basePackages = { "co.uk.app.commerce.order", "co.uk.app.commerce.catalog",
 		"co.uk.app.commerce.basket", "co.uk.app.commerce.address", "co.uk.app.commerce.shipping",
 		"co.uk.app.commerce.summary" })

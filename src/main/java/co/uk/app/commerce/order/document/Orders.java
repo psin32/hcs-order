@@ -6,12 +6,15 @@ import java.util.List;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import co.uk.app.commerce.address.document.Address;
 import co.uk.app.commerce.basket.bean.Items;
 import co.uk.app.commerce.basket.bean.Promotion;
 import co.uk.app.commerce.order.bean.OrderType;
+import co.uk.app.commerce.order.bean.PaymentBean;
 
+@Document(collection = "orders")
 public class Orders {
 
 	@Id
@@ -20,8 +23,6 @@ public class Orders {
 	private String ordersId;
 
 	private Long usersId;
-
-	private String basketId;
 
 	private String status;
 
@@ -44,6 +45,8 @@ public class Orders {
 	private Double ordertotal;
 
 	private List<Promotion> promotions;
+
+	private PaymentBean paypalPayment;
 
 	@CreatedDate
 	private Date createddate;
@@ -73,14 +76,6 @@ public class Orders {
 
 	public void setUsersId(Long usersId) {
 		this.usersId = usersId;
-	}
-
-	public String getBasketId() {
-		return basketId;
-	}
-
-	public void setBasketId(String basketId) {
-		this.basketId = basketId;
 	}
 
 	public String getStatus() {
@@ -186,15 +181,23 @@ public class Orders {
 	public void setUpdateddate(Date updateddate) {
 		this.updateddate = updateddate;
 	}
-	
+
+	public PaymentBean getPaypalPayment() {
+		return paypalPayment;
+	}
+
+	public void setPaypalPayment(PaymentBean paypalPayment) {
+		this.paypalPayment = paypalPayment;
+	}
+
 	@Override
 	public String toString() {
-		return "Orders [id=" + id + ", ordersId=" + ordersId + ", usersId=" + usersId + ", basketId=" + basketId
-				+ ", status=" + status + ", shippingaddress=" + shippingaddress + ", billingaddress=" + billingaddress
-				+ ", items=" + items + ", ordertype=" + ordertype + ", shippingmethod=" + shippingmethod
-				+ ", shippingcharges=" + shippingcharges + ", subtotal=" + subtotal + ", totaldiscount=" + totaldiscount
-				+ ", ordertotal=" + ordertotal + ", promotions=" + promotions + ", createddate=" + createddate
-				+ ", updateddate=" + updateddate + "]";
+		return "Orders [id=" + id + ", ordersId=" + ordersId + ", usersId=" + usersId + ", status=" + status
+				+ ", shippingaddress=" + shippingaddress + ", billingaddress=" + billingaddress + ", items=" + items
+				+ ", ordertype=" + ordertype + ", shippingmethod=" + shippingmethod + ", shippingcharges="
+				+ shippingcharges + ", subtotal=" + subtotal + ", totaldiscount=" + totaldiscount + ", ordertotal="
+				+ ordertotal + ", promotions=" + promotions + ", createddate=" + createddate + ", updateddate="
+				+ updateddate + "]";
 	}
 
 }

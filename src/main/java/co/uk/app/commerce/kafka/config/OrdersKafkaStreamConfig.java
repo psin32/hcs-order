@@ -2,7 +2,6 @@ package co.uk.app.commerce.kafka.config;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.common.errors.SerializationException;
@@ -14,7 +13,6 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KeyValueMapper;
-import org.apache.kafka.streams.kstream.Printed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,11 +30,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import co.uk.app.commerce.address.bean.KafkaAddressResponse;
 import co.uk.app.commerce.address.document.Address;
 import co.uk.app.commerce.address.repository.AddressRepository;
-import co.uk.app.commerce.basket.bean.KafkaBasketResponse;
-import co.uk.app.commerce.basket.document.Basket;
-import co.uk.app.commerce.order.constant.OrderConstants;
-import co.uk.app.commerce.order.document.Orders;
-import co.uk.app.commerce.order.repository.OrdersRepository;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import io.confluent.kafka.streams.serdes.avro.GenericAvroSerde;
 
@@ -70,9 +63,6 @@ public class OrdersKafkaStreamConfig {
 
 	@Autowired
 	private AddressRepository addressRepository;
-
-	@Autowired
-	private OrdersRepository ordersRepository;
 
 	private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -117,14 +107,14 @@ public class OrdersKafkaStreamConfig {
 		return address;
 	}
 
-	@Bean
-	public KStream<String, GenericRecord> kstreamBasket() throws Exception {
-		final StreamsBuilder basketBuilder = new StreamsBuilder();
-		KStream<String, GenericRecord> basket = readBasketStream(basketBuilder);
-		KafkaStreams basketStream = new KafkaStreams(basketBuilder.build(), configBasket());
-		basketStream.start();
-		return basket;
-	}
+//	@Bean
+//	public KStream<String, GenericRecord> kstreamBasket() throws Exception {
+//		final StreamsBuilder basketBuilder = new StreamsBuilder();
+//		KStream<String, GenericRecord> basket = readBasketStream(basketBuilder);
+//		KafkaStreams basketStream = new KafkaStreams(basketBuilder.build(), configBasket());
+//		basketStream.start();
+//		return basket;
+//	}
 
 	private KStream<String, GenericRecord> readAddressStream(final StreamsBuilder builder) {
 		KStream<String, GenericRecord> addressStream = builder.stream(addressTopic);
@@ -165,59 +155,65 @@ public class OrdersKafkaStreamConfig {
 		return addressStream;
 	}
 
-	private KStream<String, GenericRecord> readBasketStream(final StreamsBuilder builder) {
-		KStream<String, GenericRecord> basketStream = builder.stream(basketTopic);
-		basketStream.print(Printed.toSysOut());
-		basketStream
-				.map(new KeyValueMapper<String, GenericRecord, KeyValue<? extends String, ? extends GenericRecord>>() {
-
-					@Override
-					public KeyValue<? extends String, ? extends GenericRecord> apply(String key, GenericRecord value) {
-						JsonNode data;
-						Basket basket = null;
-						try {
-							objectMapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
-							data = objectMapper.readTree(value.toString().getBytes());
-							KafkaBasketResponse kafkaResponse = objectMapper.treeToValue(data,
-									KafkaBasketResponse.class);
-							if (null != kafkaResponse.getAfter()) {
-								basket = kafkaResponse.getAfter();
-							}
-							if (null == basket) {
-								basket = kafkaResponse.getPatch();
-							}
-							if (null != basket && OrderConstants.ORDER_STATUS_PENDING.equals(basket.getStatus())) {
-								Long usersId = Long.valueOf(basket.getUserId());
-								Orders orders = ordersRepository.findByUsersIdAndStatus(usersId,
-										OrderConstants.ORDER_STATUS_PENDING);
-								if (null != orders) {
-									LOGGER.info("Basket update received for usersId - {}", basket.getUserId());
-									orders.setItems(basket.getItems());
-									orders.setBasketId(basket.getBasketId());
-									orders.setSubtotal(basket.getBasketTotal());
-									orders.setOrdertotal(basket.getBasketTotal());
-								} else {
-									LOGGER.info("New order request received usersId - {}", basket.getUserId());
-									orders = new Orders();
-									orders.setOrdersId(UUID.randomUUID().toString());
-									orders.setBasketId(basket.getBasketId());
-									orders.setUsersId(usersId);
-									orders.setItems(basket.getItems());
-									orders.setStatus(OrderConstants.ORDER_STATUS_PENDING);
-									orders.setSubtotal(basket.getBasketTotal());
-									orders.setOrdertotal(basket.getBasketTotal());
-								}
-								ordersRepository.save(orders);
-							}
-						} catch (Exception e) {
-							LOGGER.error("Error occured while parsing basket response", e);
-							throw new SerializationException(e);
-						}
-
-						KeyValue<String, GenericRecord> kvin = new KeyValue<String, GenericRecord>(key, value);
-						return kvin;
-					}
-				});
-		return basketStream;
-	}
+//	private KStream<String, GenericRecord> readBasketStream(final StreamsBuilder builder) {
+//		KStream<String, GenericRecord> basketStream = builder.stream(basketTopic);
+//		basketStream.print(Printed.toSysOut());
+//		basketStream
+//				.map(new KeyValueMapper<String, GenericRecord, KeyValue<? extends String, ? extends GenericRecord>>() {
+//
+//					@Override
+//					public KeyValue<? extends String, ? extends GenericRecord> apply(String key, GenericRecord value) {
+//						JsonNode data;
+//						Basket basket = null;
+//						try {
+//							objectMapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
+//							if (null != value) {
+//								data = objectMapper.readTree(value.toString().getBytes());
+//								KafkaBasketResponse kafkaResponse = objectMapper.treeToValue(data,
+//										KafkaBasketResponse.class);
+//								if (null != kafkaResponse.getAfter()) {
+//									basket = kafkaResponse.getAfter();
+//								}
+//								if (null == basket) {
+//									basket = kafkaResponse.getPatch();
+//								}
+//								if (null != basket && OrderConstants.ORDER_STATUS_PENDING.equals(basket.getStatus())) {
+//									Long usersId = Long.valueOf(basket.getUserId());
+//									Orders orders = ordersRepository.findByUsersIdAndStatus(usersId,
+//											OrderConstants.ORDER_STATUS_PENDING);
+//									if (null != orders) {
+//										LOGGER.info("Basket update received for usersId - {}", basket.getUserId());
+//										orders.setItems(basket.getItems());
+//										orders.setBasketId(basket.getBasketId());
+//										orders.setSubtotal(basket.getBasketTotal());
+//										if (null != orders.getShippingcharges()) {
+//											orders.setOrdertotal(basket.getBasketTotal() + orders.getShippingcharges());
+//										} else {
+//											orders.setOrdertotal(basket.getBasketTotal());
+//										}
+//									} else {
+//										LOGGER.info("New order request received usersId - {}", basket.getUserId());
+//										orders = new Orders();
+//										orders.setOrdersId(UUID.randomUUID().toString());
+//										orders.setBasketId(basket.getBasketId());
+//										orders.setUsersId(usersId);
+//										orders.setItems(basket.getItems());
+//										orders.setStatus(OrderConstants.ORDER_STATUS_PENDING);
+//										orders.setSubtotal(basket.getBasketTotal());
+//										orders.setOrdertotal(basket.getBasketTotal());
+//									}
+//									ordersRepository.save(orders);
+//								}
+//							}
+//						} catch (Exception e) {
+//							LOGGER.error("Error occured while parsing basket response", e);
+//							throw new SerializationException(e);
+//						}
+//
+//						KeyValue<String, GenericRecord> kvin = new KeyValue<String, GenericRecord>(key, value);
+//						return kvin;
+//					}
+//				});
+//		return basketStream;
+//	}
 }

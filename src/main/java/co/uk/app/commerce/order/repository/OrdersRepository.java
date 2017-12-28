@@ -7,4 +7,6 @@ import co.uk.app.commerce.order.document.Orders;
 public interface OrdersRepository extends MongoRepository<Orders, String> {
 
 	Orders findByUsersIdAndStatus(Long usersId, String status);
+
+	Orders findByUsersIdAndPaypalPaymentPaymentId(Long usersId, String paymentId);
 }
