@@ -1,13 +1,18 @@
 package co.uk.app.commerce.order.bean;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class PayerBean {
 
+	@JsonIgnore
 	private String payerId;
 
 	private String email;
 
+	@JsonIgnore
 	private String firstname;
 
+	@JsonIgnore
 	private String lastname;
 
 	private String status;

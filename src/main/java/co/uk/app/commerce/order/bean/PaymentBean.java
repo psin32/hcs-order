@@ -1,21 +1,30 @@
 package co.uk.app.commerce.order.bean;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class PaymentBean {
 
+	@JsonIgnore
 	private String paymentId;
 
+	@JsonIgnore
 	private String status;
 
+	@JsonIgnore
 	private String intent;
 
 	private PayerBean payer;
 
+	@JsonIgnore
 	private String cartId;
 
+	@JsonIgnore
 	private PayeeBean payee;
 
+	@JsonIgnore
 	private String createTime;
 
+	@JsonIgnore
 	private String updateTime;
 
 	public String getPaymentId() {
