@@ -5,9 +5,10 @@ import co.uk.app.commerce.address.document.Address;
 import co.uk.app.commerce.order.bean.OrderConfirmationBean;
 import co.uk.app.commerce.order.bean.OrderType;
 import co.uk.app.commerce.order.document.Orders;
+import co.uk.app.commerce.order.exception.OrdersApplicationException;
 
 public interface OrdersService {
-	
+
 	Orders save(Orders orders);
 
 	Orders addItem(AddItemBean addItemBean, Long usersId, String currency);
@@ -24,6 +25,6 @@ public interface OrdersService {
 
 	Orders saveShippingMethod(Long usersId, String shippingName);
 
-	Orders confirmOrder(Long usersId, OrderConfirmationBean orderConfirmationBean);
+	Orders confirmOrder(Long usersId, OrderConfirmationBean orderConfirmationBean) throws OrdersApplicationException;
 
 }

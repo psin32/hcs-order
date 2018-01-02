@@ -22,6 +22,7 @@ import co.uk.app.commerce.order.bean.OrderType;
 import co.uk.app.commerce.order.constant.OrderConstants;
 import co.uk.app.commerce.order.converter.OrderTypeConverter;
 import co.uk.app.commerce.order.document.Orders;
+import co.uk.app.commerce.order.exception.OrdersApplicationException;
 import co.uk.app.commerce.order.service.OrdersService;
 
 @RestController
@@ -41,18 +42,18 @@ public class OrdersController {
 		return ResponseEntity.status(HttpStatus.CONFLICT).build();
 	}
 
-	@GetMapping(path = "/option/{type}")
+	@PostMapping(path = "/option/{type}")
 	public ResponseEntity<?> selectDeliveryOption(@PathVariable(value = "type") OrderType orderType,
 			HttpServletRequest request) {
 		Long usersId = Long.valueOf(String.valueOf(request.getAttribute(OrderConstants.USER_ID)));
 		Orders orders = ordersService.saveDeliveryOption(usersId, orderType);
 		if (null != orders) {
-			return ResponseEntity.ok().build();
+			return ResponseEntity.ok(orders);
 		}
 		return ResponseEntity.status(HttpStatus.CONFLICT).build();
 	}
 
-	@GetMapping(path = "/shipping/{type}")
+	@PostMapping(path = "/shipping/{type}")
 	public ResponseEntity<?> selectShippingMethod(@PathVariable(value = "type") String shippingName,
 			HttpServletRequest request) {
 		Long usersId = Long.valueOf(String.valueOf(request.getAttribute(OrderConstants.USER_ID)));
@@ -77,7 +78,12 @@ public class OrdersController {
 	public ResponseEntity<?> orderConfirmation(@RequestBody OrderConfirmationBean orderConfirmationBean,
 			HttpServletRequest request, HttpServletResponse response) {
 		Long usersId = Long.valueOf(String.valueOf(request.getAttribute(OrderConstants.USER_ID)));
-		Orders orders = ordersService.confirmOrder(usersId, orderConfirmationBean);
+		Orders orders = null;
+		try {
+			orders = ordersService.confirmOrder(usersId, orderConfirmationBean);
+		} catch (OrdersApplicationException e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		}
 		if (null != orders) {
 			if (null != orders.getStatus()
 					&& orders.getStatus().equalsIgnoreCase(OrderConstants.ORDER_STATUS_COMPLETE)) {

@@ -21,11 +21,31 @@ public class PaymentBean {
 	@JsonIgnore
 	private PayeeBean payee;
 
+	private String currency;
+
+	private String amount;
+
 	@JsonIgnore
 	private String createTime;
 
 	@JsonIgnore
 	private String updateTime;
+
+	public String getCurrency() {
+		return currency;
+	}
+
+	public void setCurrency(String currency) {
+		this.currency = currency;
+	}
+
+	public String getAmount() {
+		return amount;
+	}
+
+	public void setAmount(String amount) {
+		this.amount = amount;
+	}
 
 	public String getPaymentId() {
 		return paymentId;

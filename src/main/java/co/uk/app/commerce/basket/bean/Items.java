@@ -2,6 +2,8 @@ package co.uk.app.commerce.basket.bean;
 
 import java.util.List;
 
+import co.uk.app.commerce.order.util.PriceFormattingUtil;
+
 public class Items {
 
 	private String partnumber;
@@ -19,7 +21,13 @@ public class Items {
 	private Integer quantity;
 
 	private Double itemtotal;
-	
+
+	private String formattedListprice;
+
+	private String formattedOfferprice;
+
+	private String formattedItemtotal;
+
 	private String url;
 
 	private List<Promotion> promotions;
@@ -102,6 +110,21 @@ public class Items {
 
 	public void setUrl(String url) {
 		this.url = url;
+	}
+
+	public String getFormattedListprice() {
+		formattedListprice = PriceFormattingUtil.formatPriceAsString(this.listprice);
+		return formattedListprice;
+	}
+
+	public String getFormattedOfferprice() {
+		formattedOfferprice = PriceFormattingUtil.formatPriceAsString(this.offerprice);
+		return formattedOfferprice;
+	}
+
+	public String getFormattedItemtotal() {
+		formattedItemtotal = PriceFormattingUtil.formatPriceAsString(this.itemtotal);
+		return formattedItemtotal;
 	}
 
 }

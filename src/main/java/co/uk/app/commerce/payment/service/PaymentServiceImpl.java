@@ -24,6 +24,7 @@ import com.paypal.base.rest.PayPalRESTException;
 import co.uk.app.commerce.order.bean.PaymentBean;
 import co.uk.app.commerce.order.constant.OrderConstants;
 import co.uk.app.commerce.order.document.Orders;
+import co.uk.app.commerce.order.exception.OrdersApplicationException;
 import co.uk.app.commerce.order.service.OrdersService;
 
 @Component
@@ -41,18 +42,19 @@ public class PaymentServiceImpl implements PaymentService {
 	@Value("${payment.paypal.configuration.return.url}")
 	private String returnURL;
 
+	@Value("${payment.paypal.configuration.mode}")
+	private String paypalMode;
+
 	@Autowired
 	private OrdersService ordersService;
 
 	@Override
-	public Payment createPaypalPayment(Long usersId) {
+	public Payment createPaypalPayment(Long usersId) throws OrdersApplicationException {
 		Payment createdPayment = null;
 		Orders orders = ordersService.getPendingOrderByUsersId(usersId);
 
-		String mode = "sandbox";
-
 		try {
-			APIContext apiContext = new APIContext(clientId, clientSecret, mode);
+			APIContext apiContext = new APIContext(clientId, clientSecret, paypalMode);
 
 			Payer payer = new Payer();
 			payer.setPaymentMethod("paypal");
@@ -66,12 +68,12 @@ public class PaymentServiceImpl implements PaymentService {
 			itemList.setShippingMethod(orders.getShippingmethod());
 
 			Details details = new Details();
-			details.setShipping(String.valueOf(orders.getShippingcharges()));
-			details.setSubtotal(String.valueOf(orders.getSubtotal()));
+			details.setShipping(orders.getFormattedShippingcharges());
+			details.setSubtotal(orders.getFormattedSubtotal());
 
 			Amount amount = new Amount();
 			amount.setCurrency(OrderConstants.CURRENCY_UK);
-			amount.setTotal(String.valueOf(orders.getOrdertotal()));
+			amount.setTotal(orders.getFormattedOrdertotal());
 			amount.setDetails(details);
 
 			Transaction transaction = new Transaction();
@@ -113,21 +115,20 @@ public class PaymentServiceImpl implements PaymentService {
 				ordersService.save(orders);
 			}
 		} catch (PayPalRESTException e) {
-			e.printStackTrace();
+			throw new OrdersApplicationException("Exception occured while creating paypal payment - ", e);
 		}
 		return createdPayment;
 	}
 
 	@Override
-	public Payment getPaypalPaymentDetails(Long usersId, String paymentId) {
+	public Payment getPaypalPaymentDetails(Long usersId, String paymentId) throws OrdersApplicationException {
 		Payment payment = null;
-		String mode = "sandbox";
 
 		try {
-			APIContext apiContext = new APIContext(clientId, clientSecret, mode);
+			APIContext apiContext = new APIContext(clientId, clientSecret, paypalMode);
 			payment = Payment.get(apiContext, paymentId);
 		} catch (PayPalRESTException e) {
-			e.printStackTrace();
+			throw new OrdersApplicationException("Exception occured while fetching paypal payment - ", e);
 		}
 		return payment;
 	}
@@ -139,7 +140,7 @@ public class PaymentServiceImpl implements PaymentService {
 			item.setName(items.getName());
 			item.setSku(items.getPartnumber());
 			item.setCurrency(OrderConstants.CURRENCY_UK);
-			item.setPrice(String.valueOf(items.getListprice()));
+			item.setPrice(items.getFormattedListprice());
 			item.setQuantity(String.valueOf(items.getQuantity()));
 
 			listOfItem.add(item);
@@ -162,18 +163,18 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	@Override
-	public Payment executePayment(Payment payment, Orders orders) {
+	public Payment executePayment(Payment payment, Orders orders) throws OrdersApplicationException {
 
-		APIContext apiContext = new APIContext(clientId, clientSecret, "sandbox");
+		APIContext apiContext = new APIContext(clientId, clientSecret, paypalMode);
 		Transactions transactions = new Transactions();
 
 		Details details = new Details();
-		details.setShipping(String.valueOf(orders.getShippingcharges()));
-		details.setSubtotal(String.valueOf(orders.getSubtotal()));
+		details.setShipping(orders.getFormattedShippingcharges());
+		details.setSubtotal(orders.getFormattedSubtotal());
 
 		Amount amount = new Amount();
 		amount.setCurrency(OrderConstants.CURRENCY_UK);
-		amount.setTotal(String.valueOf(orders.getOrdertotal()));
+		amount.setTotal(orders.getFormattedOrdertotal());
 		amount.setDetails(details);
 
 		transactions.setAmount(amount);
@@ -189,7 +190,7 @@ public class PaymentServiceImpl implements PaymentService {
 		try {
 			updatedPayment = payment.execute(apiContext, paymentExecution);
 		} catch (PayPalRESTException e) {
-			e.printStackTrace();
+			throw new OrdersApplicationException("Exception occured while executing paypal payment - ", e);
 		}
 		return updatedPayment;
 	}

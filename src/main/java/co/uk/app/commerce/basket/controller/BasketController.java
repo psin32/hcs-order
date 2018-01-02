@@ -47,7 +47,7 @@ public class BasketController {
 		Long usersId = Long.valueOf(String.valueOf(request.getAttribute(OrderConstants.USER_ID)));
 		Orders orders = ordersService.updateBasket(addItemBean, usersId, OrderConstants.CURRENCY_UK);
 		String cookieValue = "0";
-		if (null != orders) {
+		if (null != orders && null != orders.getItems()) {
 			cookieValue = String.valueOf(orders.getItems().stream().mapToInt(item -> item.getQuantity()).sum());
 		}
 		Cookie cookie = new Cookie(OrderConstants.BASKET_COUNT, cookieValue);
@@ -62,7 +62,7 @@ public class BasketController {
 		Long usersId = Long.valueOf(String.valueOf(request.getAttribute(OrderConstants.USER_ID)));
 		Orders orders = ordersService.deleteItem(partnumber, usersId, OrderConstants.CURRENCY_UK);
 		String cookieValue = "0";
-		if (null != orders) {
+		if (null != orders && null != orders.getItems()) {
 			cookieValue = String.valueOf(orders.getItems().stream().mapToInt(item -> item.getQuantity()).sum());
 		}
 		Cookie cookie = new Cookie(OrderConstants.BASKET_COUNT, cookieValue);

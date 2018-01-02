@@ -1,6 +1,5 @@
 package co.uk.app.commerce.order.service;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -10,6 +9,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.paypal.api.payments.Amount;
 import com.paypal.api.payments.Payment;
 
 import co.uk.app.commerce.additem.bean.AddItemBean;
@@ -27,7 +27,9 @@ import co.uk.app.commerce.order.bean.PayerBean;
 import co.uk.app.commerce.order.bean.PaymentBean;
 import co.uk.app.commerce.order.constant.OrderConstants;
 import co.uk.app.commerce.order.document.Orders;
+import co.uk.app.commerce.order.exception.OrdersApplicationException;
 import co.uk.app.commerce.order.repository.OrdersRepository;
+import co.uk.app.commerce.order.util.PriceFormattingUtil;
 import co.uk.app.commerce.payment.service.PaymentService;
 import co.uk.app.commerce.shipping.document.Shipping;
 import co.uk.app.commerce.shipping.repository.ShippingRepository;
@@ -104,7 +106,8 @@ public class OrdersServiceImpl implements OrdersService {
 	}
 
 	@Override
-	public Orders confirmOrder(Long usersId, OrderConfirmationBean orderConfirmationBean) {
+	public Orders confirmOrder(Long usersId, OrderConfirmationBean orderConfirmationBean)
+			throws OrdersApplicationException {
 		Orders orders = ordersRepository.findByUsersIdAndStatus(usersId, OrderConstants.ORDER_STATUS_PENDING);
 
 		if (null != orders) {
@@ -131,6 +134,16 @@ public class OrdersServiceImpl implements OrdersService {
 				payerBean.setStatus(paymentAfterExecute.getPayer().getStatus());
 
 				paymentBean.setPayer(payerBean);
+			}
+
+			if (null != paymentAfterExecute && null != paymentAfterExecute.getTransactions()) {
+				paymentAfterExecute.getTransactions().stream().forEach(transaction -> {
+					Amount amount = transaction.getAmount();
+					if (null != amount) {
+						paymentBean.setCurrency(amount.getCurrency());
+						paymentBean.setAmount(amount.getTotal());
+					}
+				});
 			}
 
 			if (null != paymentAfterExecute && null != paymentAfterExecute.getPayee()) {
@@ -176,15 +189,14 @@ public class OrdersServiceImpl implements OrdersService {
 			}
 			items = getItemDetails(addItemBean, currency, catentry, items, true);
 			orders.setItems(items);
-			DecimalFormat formatter = new DecimalFormat("#0.00");
-			orders.setSubtotal(
-					Double.valueOf(formatter.format(items.stream().mapToDouble(item -> item.getItemtotal()).sum())));
+			orders.setSubtotal(PriceFormattingUtil.formatPriceAsDouble(
+					Double.valueOf(items.stream().mapToDouble(item -> item.getItemtotal()).sum())));
 			orders.setShippingaddress(null);
 			orders.setShippingcharges(null);
 			orders.setOrdertype(null);
 			orders.setShippingmethod(null);
-			orders.setOrdertotal(
-					Double.valueOf(formatter.format(items.stream().mapToDouble(item -> item.getItemtotal()).sum())));
+			orders.setOrdertotal(PriceFormattingUtil.formatPriceAsDouble(
+					Double.valueOf(items.stream().mapToDouble(item -> item.getItemtotal()).sum())));
 		}
 		Orders updatedOrders = new Orders();
 		if (null != orders) {
@@ -199,8 +211,7 @@ public class OrdersServiceImpl implements OrdersService {
 
 	private Double calculateItemTotal(Double listPrice, Integer quantity) {
 		Double itemTotal = listPrice * quantity;
-		DecimalFormat formatter = new DecimalFormat("#0.00");
-		return Double.valueOf(formatter.format(itemTotal));
+		return PriceFormattingUtil.formatPriceAsDouble(itemTotal);
 	}
 
 	private List<Items> getItemDetails(AddItemBean addItemBean, String currency, Catentry catentry,
@@ -238,7 +249,7 @@ public class OrdersServiceImpl implements OrdersService {
 				.findAny().orElse(null);
 		if (null != price) {
 			Double listPrice = Double.valueOf(price.getPrice());
-			items.setListprice(listPrice);
+			items.setListprice(PriceFormattingUtil.formatPriceAsDouble(listPrice));
 
 			items.setItemtotal(calculateItemTotal(listPrice, items.getQuantity()));
 		} else {
@@ -272,22 +283,21 @@ public class OrdersServiceImpl implements OrdersService {
 			if (null == orders) {
 				orders = new Orders();
 				orders.setUsersId(usersId);
-				orders.setStatus("P");
+				orders.setStatus(OrderConstants.ORDER_STATUS_PENDING);
 			} else {
 				items = orders.getItems();
 			}
 			items = getItemDetails(addItemBean, currency, catentry, items, false);
 			orders.setItems(items);
 
-			DecimalFormat formatter = new DecimalFormat("#0.00");
-			orders.setSubtotal(
-					Double.valueOf(formatter.format(items.stream().mapToDouble(item -> item.getItemtotal()).sum())));
+			orders.setSubtotal(PriceFormattingUtil.formatPriceAsDouble(
+					Double.valueOf(items.stream().mapToDouble(item -> item.getItemtotal()).sum())));
 			orders.setShippingaddress(null);
 			orders.setShippingcharges(null);
 			orders.setOrdertype(null);
 			orders.setShippingmethod(null);
-			orders.setOrdertotal(
-					Double.valueOf(formatter.format(items.stream().mapToDouble(item -> item.getItemtotal()).sum())));
+			orders.setOrdertotal(PriceFormattingUtil.formatPriceAsDouble(
+					Double.valueOf(items.stream().mapToDouble(item -> item.getItemtotal()).sum())));
 		}
 		Orders updatedOrders = new Orders();
 		if (null != orders) {
@@ -313,15 +323,14 @@ public class OrdersServiceImpl implements OrdersService {
 				if (orders.getItems().isEmpty()) {
 					ordersRepository.delete(orders.getId());
 				} else {
-					DecimalFormat formatter = new DecimalFormat("#0.00");
-					orders.setSubtotal(Double.valueOf(formatter
-							.format(orders.getItems().stream().mapToDouble(item -> item.getItemtotal()).sum())));
+					orders.setSubtotal(PriceFormattingUtil.formatPriceAsDouble(
+							Double.valueOf(orders.getItems().stream().mapToDouble(item -> item.getItemtotal()).sum())));
 					orders.setShippingaddress(null);
 					orders.setShippingcharges(null);
 					orders.setOrdertype(null);
 					orders.setShippingmethod(null);
-					orders.setOrdertotal(Double.valueOf(formatter
-							.format(orders.getItems().stream().mapToDouble(item -> item.getItemtotal()).sum())));
+					orders.setOrdertotal(PriceFormattingUtil.formatPriceAsDouble(
+							Double.valueOf(orders.getItems().stream().mapToDouble(item -> item.getItemtotal()).sum())));
 					updatedOrders = ordersRepository.save(orders);
 				}
 			}

@@ -14,6 +14,7 @@ import com.paypal.api.payments.Links;
 import com.paypal.api.payments.Payment;
 
 import co.uk.app.commerce.order.constant.OrderConstants;
+import co.uk.app.commerce.order.exception.OrdersApplicationException;
 import co.uk.app.commerce.payment.service.PaymentService;
 
 @RestController
@@ -26,7 +27,12 @@ public class PaymentController {
 	@PostMapping(path = "/paypal")
 	public ResponseEntity<?> paypalPayment(HttpServletRequest request, HttpServletResponse response) {
 		Long usersId = Long.valueOf(String.valueOf(request.getAttribute(OrderConstants.USER_ID)));
-		Payment payment = paymentService.createPaypalPayment(usersId);
+		Payment payment = null;
+		try {
+			payment = paymentService.createPaypalPayment(usersId);
+		} catch (OrdersApplicationException e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		}
 		if (null != payment) {
 			for (Links links : payment.getLinks()) {
 				if (links.getRel().equals("approval_url")) {
@@ -36,5 +42,4 @@ public class PaymentController {
 		}
 		return ResponseEntity.status(HttpStatus.CONFLICT).build();
 	}
-
 }

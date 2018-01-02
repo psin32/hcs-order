@@ -13,6 +13,7 @@ import co.uk.app.commerce.basket.bean.Items;
 import co.uk.app.commerce.basket.bean.Promotion;
 import co.uk.app.commerce.order.bean.OrderType;
 import co.uk.app.commerce.order.bean.PaymentBean;
+import co.uk.app.commerce.order.util.PriceFormattingUtil;
 
 @Document(collection = "orders")
 public class Orders {
@@ -43,6 +44,14 @@ public class Orders {
 	private Double totaldiscount;
 
 	private Double ordertotal;
+
+	private String formattedShippingcharges;
+
+	private String formattedSubtotal;
+
+	private String formattedTotaldiscount;
+
+	private String formattedOrdertotal;
 
 	private List<Promotion> promotions;
 
@@ -188,6 +197,26 @@ public class Orders {
 
 	public void setPaypalPayment(PaymentBean paypalPayment) {
 		this.paypalPayment = paypalPayment;
+	}
+
+	public String getFormattedShippingcharges() {
+		formattedShippingcharges = PriceFormattingUtil.formatPriceAsString(this.shippingcharges);
+		return formattedShippingcharges;
+	}
+
+	public String getFormattedSubtotal() {
+		formattedSubtotal = PriceFormattingUtil.formatPriceAsString(this.subtotal);
+		return formattedSubtotal;
+	}
+
+	public String getFormattedTotaldiscount() {
+		formattedTotaldiscount = PriceFormattingUtil.formatPriceAsString(this.totaldiscount);
+		return formattedTotaldiscount;
+	}
+
+	public String getFormattedOrdertotal() {
+		formattedOrdertotal = PriceFormattingUtil.formatPriceAsString(this.ordertotal);
+		return formattedOrdertotal;
 	}
 
 	@Override

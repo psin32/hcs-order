@@ -7,7 +7,7 @@ public class OfferPrice {
 
 	private String currency;
 	
-	private String price;
+	private Double price;
 	
 	private String status;
 	
@@ -23,11 +23,11 @@ public class OfferPrice {
 		this.currency = currency;
 	}
 
-	public String getPrice() {
+	public Double getPrice() {
 		return price;
 	}
 
-	public void setPrice(String price) {
+	public void setPrice(Double price) {
 		this.price = price;
 	}
 
