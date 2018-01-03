@@ -10,5 +10,5 @@ public interface ShippingService {
 	
 	Shipping getActiveShippingByName(String name);
 
-	List<Shipping> getActiveShippingForCurrentOrder(Long usersId);
+	List<Shipping> getActiveShippingForCurrentOrder(String usersId);
 }

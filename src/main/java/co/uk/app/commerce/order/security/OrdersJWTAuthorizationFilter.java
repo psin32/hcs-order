@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
+import co.uk.app.commerce.order.constant.OrderConstants;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 
@@ -60,10 +61,10 @@ public class OrdersJWTAuthorizationFilter extends BasicAuthenticationFilter {
 			securityConfiguration = webApplicationContext.getBean(OrdersSecurityConfiguration.class);
 		}
 		String token = null;
-		
+
 		String authHeader = request.getHeader(securityConfiguration.getJwtHeader());
 		if (authHeader != null && authHeader.startsWith(securityConfiguration.getJwtTokenPrefix())) {
-			token =  authHeader.replace(securityConfiguration.getJwtTokenPrefix(), "");
+			token = authHeader.replace(securityConfiguration.getJwtTokenPrefix(), "");
 		}
 		if (token != null) {
 
@@ -78,10 +79,12 @@ public class OrdersJWTAuthorizationFilter extends BasicAuthenticationFilter {
 
 			if (null != claims) {
 				String user = claims.getSubject();
-				
+
 				if (user != null) {
-					request.setAttribute("USER_ID", claims.get("userId"));
-					request.setAttribute("REGISTER_TYPE", claims.get("registertype"));
+					request.setAttribute(OrderConstants.REQUEST_HEADER_USER_ID,
+							claims.get(OrderConstants.JWT_CLAIM_USER_ID));
+					request.setAttribute(OrderConstants.REQUEST_HEADER_REGISTER_TYPE,
+							claims.get(OrderConstants.JWT_CLAIM_REGISTER_TYPE));
 					return new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
 				}
 			}

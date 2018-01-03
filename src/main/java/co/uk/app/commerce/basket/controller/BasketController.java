@@ -29,13 +29,13 @@ public class BasketController {
 
 	@GetMapping
 	public @ResponseBody Orders getBasketByUserId(HttpServletRequest request, HttpServletResponse response) {
-		Long usersId = Long.valueOf(String.valueOf(request.getAttribute(OrderConstants.USER_ID)));
+		String usersId = String.valueOf(request.getAttribute(OrderConstants.REQUEST_HEADER_USER_ID));
 		Orders orders = ordersService.getPendingOrderByUsersId(usersId);
 		String cookieValue = "0";
 		if (null != orders) {
 			cookieValue = String.valueOf(orders.getItems().stream().mapToInt(item -> item.getQuantity()).sum());
 		}
-		Cookie cookie = new Cookie(OrderConstants.BASKET_COUNT, cookieValue);
+		Cookie cookie = new Cookie(OrderConstants.COOKIE_BASKET_COUNT, cookieValue);
 		cookie.setPath("/");
 		response.addCookie(cookie);
 		return orders;
@@ -44,13 +44,13 @@ public class BasketController {
 	@PatchMapping
 	public ResponseEntity<?> updateBasket(@RequestBody AddItemBean addItemBean, HttpServletRequest request,
 			HttpServletResponse response) {
-		Long usersId = Long.valueOf(String.valueOf(request.getAttribute(OrderConstants.USER_ID)));
+		String usersId = String.valueOf(request.getAttribute(OrderConstants.REQUEST_HEADER_USER_ID));
 		Orders orders = ordersService.updateBasket(addItemBean, usersId, OrderConstants.CURRENCY_UK);
 		String cookieValue = "0";
 		if (null != orders && null != orders.getItems()) {
 			cookieValue = String.valueOf(orders.getItems().stream().mapToInt(item -> item.getQuantity()).sum());
 		}
-		Cookie cookie = new Cookie(OrderConstants.BASKET_COUNT, cookieValue);
+		Cookie cookie = new Cookie(OrderConstants.COOKIE_BASKET_COUNT, cookieValue);
 		cookie.setPath("/");
 		response.addCookie(cookie);
 		return ResponseEntity.ok(orders);
@@ -59,13 +59,13 @@ public class BasketController {
 	@DeleteMapping(path = "/{partnumber}")
 	public ResponseEntity<?> deleteItem(@PathVariable("partnumber") String partnumber, HttpServletRequest request,
 			HttpServletResponse response) {
-		Long usersId = Long.valueOf(String.valueOf(request.getAttribute(OrderConstants.USER_ID)));
+		String usersId = String.valueOf(request.getAttribute(OrderConstants.REQUEST_HEADER_USER_ID));
 		Orders orders = ordersService.deleteItem(partnumber, usersId, OrderConstants.CURRENCY_UK);
 		String cookieValue = "0";
 		if (null != orders && null != orders.getItems()) {
 			cookieValue = String.valueOf(orders.getItems().stream().mapToInt(item -> item.getQuantity()).sum());
 		}
-		Cookie cookie = new Cookie(OrderConstants.BASKET_COUNT, cookieValue);
+		Cookie cookie = new Cookie(OrderConstants.COOKIE_BASKET_COUNT, cookieValue);
 		cookie.setPath("/");
 		response.addCookie(cookie);
 		return ResponseEntity.ok(orders);

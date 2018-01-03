@@ -35,7 +35,7 @@ public class ShippingController {
 
 	@GetMapping
 	public ResponseEntity<?> getShippingMethods(HttpServletRequest request) {
-		Long usersId = Long.valueOf(String.valueOf(request.getAttribute(OrderConstants.USER_ID)));
+		String usersId = String.valueOf(request.getAttribute(OrderConstants.REQUEST_HEADER_USER_ID));
 		List<Shipping> shipping = shippingService.getActiveShippingForCurrentOrder(usersId);
 		if (null != shipping) {
 			return ResponseEntity.ok(shipping);

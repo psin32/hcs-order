@@ -23,7 +23,7 @@ public class Orders {
 
 	private String ordersId;
 
-	private Long usersId;
+	private String usersId;
 
 	private String status;
 
@@ -62,6 +62,16 @@ public class Orders {
 
 	@LastModifiedDate
 	private Date updateddate;
+	
+	private String timeplaced;
+
+	public String getTimeplaced() {
+		return timeplaced;
+	}
+
+	public void setTimeplaced(String timeplaced) {
+		this.timeplaced = timeplaced;
+	}
 
 	public String getId() {
 		return id;
@@ -79,11 +89,11 @@ public class Orders {
 		this.ordersId = ordersId;
 	}
 
-	public Long getUsersId() {
+	public String getUsersId() {
 		return usersId;
 	}
 
-	public void setUsersId(Long usersId) {
+	public void setUsersId(String usersId) {
 		this.usersId = usersId;
 	}
 

@@ -1,5 +1,7 @@
 package co.uk.app.commerce.order.service;
 
+import java.util.Collection;
+
 import co.uk.app.commerce.additem.bean.AddItemBean;
 import co.uk.app.commerce.address.document.Address;
 import co.uk.app.commerce.order.bean.OrderConfirmationBean;
@@ -11,20 +13,25 @@ public interface OrdersService {
 
 	Orders save(Orders orders);
 
-	Orders addItem(AddItemBean addItemBean, Long usersId, String currency);
+	Orders addItem(AddItemBean addItemBean, String usersId, String currency);
 
-	Orders updateBasket(AddItemBean addItemBean, Long usersId, String currency);
+	Orders updateBasket(AddItemBean addItemBean, String usersId, String currency);
 
-	Orders deleteItem(String partnumber, Long usersId, String currency);
+	Orders deleteItem(String partnumber, String usersId, String currency);
 
-	Orders getPendingOrderByUsersId(Long usersId);
+	Orders getPendingOrderByUsersId(String usersId);
+	
+	Orders getPlacedOrderByUsersIdAndOrdersId(String usersId, String ordersId);
+	
+	Collection<Orders> getPlacedOrdersByUsersId(String usersId);
 
-	Orders saveDeliveryOption(Long usersId, OrderType orderType);
+	Orders saveDeliveryOption(String usersId, OrderType orderType);
 
-	Orders saveDeliveryAddress(Long usersId, Address address);
+	Orders saveDeliveryAddress(String usersId, Address address);
 
-	Orders saveShippingMethod(Long usersId, String shippingName);
+	Orders saveShippingMethod(String usersId, String shippingName);
 
-	Orders confirmOrder(Long usersId, OrderConfirmationBean orderConfirmationBean) throws OrdersApplicationException;
+	Orders confirmOrder(String usersId, OrderConfirmationBean orderConfirmationBean) throws OrdersApplicationException;
 
+	String generateToken(String usersId);
 }

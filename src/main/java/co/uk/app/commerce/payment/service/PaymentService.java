@@ -7,9 +7,9 @@ import co.uk.app.commerce.order.exception.OrdersApplicationException;
 
 public interface PaymentService {
 
-	Payment createPaypalPayment(Long usersId) throws OrdersApplicationException;
+	Payment createPaypalPayment(String usersId) throws OrdersApplicationException;
 
-	Payment getPaypalPaymentDetails(Long usersId, String paymentId) throws OrdersApplicationException;
+	Payment getPaypalPaymentDetails(String usersId, String paymentId) throws OrdersApplicationException;
 
 	Payment executePayment(Payment payment, Orders orders) throws OrdersApplicationException;
 }

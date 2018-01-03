@@ -49,7 +49,7 @@ public class PaymentServiceImpl implements PaymentService {
 	private OrdersService ordersService;
 
 	@Override
-	public Payment createPaypalPayment(Long usersId) throws OrdersApplicationException {
+	public Payment createPaypalPayment(String usersId) throws OrdersApplicationException {
 		Payment createdPayment = null;
 		Orders orders = ordersService.getPendingOrderByUsersId(usersId);
 
@@ -94,7 +94,7 @@ public class PaymentServiceImpl implements PaymentService {
 			payment.setPayer(payer);
 			payment.setTransactions(transactions);
 			payment.setRedirectUrls(redirectUrls);
-
+			
 			createdPayment = payment.create(apiContext);
 
 			if (null != createdPayment
@@ -121,7 +121,7 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	@Override
-	public Payment getPaypalPaymentDetails(Long usersId, String paymentId) throws OrdersApplicationException {
+	public Payment getPaypalPaymentDetails(String usersId, String paymentId) throws OrdersApplicationException {
 		Payment payment = null;
 
 		try {

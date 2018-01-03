@@ -1,12 +1,21 @@
 package co.uk.app.commerce.order.service;
 
+import java.security.Key;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.DatatypeConverter;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Component;
 
 import com.paypal.api.payments.Amount;
@@ -14,7 +23,6 @@ import com.paypal.api.payments.Payment;
 
 import co.uk.app.commerce.additem.bean.AddItemBean;
 import co.uk.app.commerce.address.document.Address;
-import co.uk.app.commerce.address.repository.AddressRepository;
 import co.uk.app.commerce.basket.bean.Items;
 import co.uk.app.commerce.catalog.bean.Image;
 import co.uk.app.commerce.catalog.bean.ListPrice;
@@ -29,16 +37,16 @@ import co.uk.app.commerce.order.constant.OrderConstants;
 import co.uk.app.commerce.order.document.Orders;
 import co.uk.app.commerce.order.exception.OrdersApplicationException;
 import co.uk.app.commerce.order.repository.OrdersRepository;
+import co.uk.app.commerce.order.security.OrdersSecurityConfiguration;
 import co.uk.app.commerce.order.util.PriceFormattingUtil;
 import co.uk.app.commerce.payment.service.PaymentService;
 import co.uk.app.commerce.shipping.document.Shipping;
 import co.uk.app.commerce.shipping.repository.ShippingRepository;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 
 @Component
 public class OrdersServiceImpl implements OrdersService {
-
-	@Autowired
-	private AddressRepository addressRepository;
 
 	@Autowired
 	private OrdersRepository ordersRepository;
@@ -52,9 +60,14 @@ public class OrdersServiceImpl implements OrdersService {
 	@Autowired
 	private PaymentService paymentService;
 
+	@Autowired
+	private OrdersSecurityConfiguration securityConfiguration;
+
+	private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS512;
+
 	@Override
-	public Orders saveDeliveryOption(Long usersId, OrderType orderType) {
-		Orders orders = ordersRepository.findByUsersIdAndStatus(usersId, OrderConstants.ORDER_STATUS_PENDING);
+	public Orders saveDeliveryOption(String usersId, OrderType orderType) {
+		Orders orders = getPendingOrderByUsersId(usersId);
 		if (null != orders) {
 			orders.setOrdertype(orderType);
 			orders.setShippingaddress(null);
@@ -67,22 +80,48 @@ public class OrdersServiceImpl implements OrdersService {
 	}
 
 	@Override
-	public Orders getPendingOrderByUsersId(Long usersId) {
+	public Orders getPendingOrderByUsersId(String usersId) {
+		Orders order = null;
+		if (null != usersId) {
+			Sort sort = new Sort(Direction.ASC, "updateddate");
+			Collection<Orders> orders = ordersRepository.findByUsersIdAndStatus(usersId,
+					OrderConstants.ORDER_STATUS_PENDING, sort);
+			if (null != orders) {
+				order = orders.stream()
+						.filter(ord -> ord.getStatus().equalsIgnoreCase(OrderConstants.ORDER_STATUS_PENDING))
+						.findFirst().orElse(null);
+			}
+		}
+		return order;
+	}
+
+	@Override
+	public Orders getPlacedOrderByUsersIdAndOrdersId(String usersId, String ordersId) {
 		Orders orders = null;
 		if (null != usersId) {
-			orders = ordersRepository.findByUsersIdAndStatus(usersId, OrderConstants.ORDER_STATUS_PENDING);
+			orders = ordersRepository.findByUsersIdAndStatusAndOrdersId(usersId, OrderConstants.ORDER_STATUS_COMPLETE,
+					ordersId);
 		}
 		return orders;
 	}
 
 	@Override
-	public Orders saveDeliveryAddress(Long usersId, Address address) {
-		Address shippingAddress = addressRepository.findByUsersIdAndAddressId(usersId, address.getAddressId());
-		if (null == shippingAddress) {
-			shippingAddress = address;
+	public Collection<Orders> getPlacedOrdersByUsersId(String usersId) {
+		Collection<Orders> orders = null;
+		if (null != usersId) {
+			Sort sort = new Sort(Direction.DESC, "updateddate");
+			orders = ordersRepository.findByUsersIdAndStatus(usersId, OrderConstants.ORDER_STATUS_COMPLETE, sort);
 		}
-		Orders orders = ordersRepository.findByUsersIdAndStatus(usersId, OrderConstants.ORDER_STATUS_PENDING);
-		orders.setShippingaddress(shippingAddress);
+		return orders;
+	}
+
+	@Override
+	public Orders saveDeliveryAddress(String usersId, Address address) {
+		if (null != address && address.getAddressId() == null) {
+			address.setAddressId(0L);
+		}
+		Orders orders = getPendingOrderByUsersId(usersId);
+		orders.setShippingaddress(address);
 		orders.setShippingmethod(null);
 		orders.setShippingcharges(null);
 		orders.setOrdertotal(orders.getSubtotal());
@@ -90,11 +129,11 @@ public class OrdersServiceImpl implements OrdersService {
 	}
 
 	@Override
-	public Orders saveShippingMethod(Long usersId, String shippingName) {
+	public Orders saveShippingMethod(String usersId, String shippingName) {
 		Shipping shipping = shippingRepository.findByName(shippingName);
 		Orders updatedOrder = null;
 		if (null != shipping) {
-			Orders orders = ordersRepository.findByUsersIdAndStatus(usersId, OrderConstants.ORDER_STATUS_PENDING);
+			Orders orders = getPendingOrderByUsersId(usersId);
 			if (null != orders) {
 				orders.setShippingmethod(shipping.getName());
 				orders.setShippingcharges(shipping.getAmount());
@@ -106,9 +145,9 @@ public class OrdersServiceImpl implements OrdersService {
 	}
 
 	@Override
-	public Orders confirmOrder(Long usersId, OrderConfirmationBean orderConfirmationBean)
+	public Orders confirmOrder(String usersId, OrderConfirmationBean orderConfirmationBean)
 			throws OrdersApplicationException {
-		Orders orders = ordersRepository.findByUsersIdAndStatus(usersId, OrderConstants.ORDER_STATUS_PENDING);
+		Orders orders = getPendingOrderByUsersId(usersId);
 
 		if (null != orders) {
 			Payment paymentAfterGet = paymentService.getPaypalPaymentDetails(usersId,
@@ -160,6 +199,9 @@ public class OrdersServiceImpl implements OrdersService {
 					&& paymentAfterExecute.getState().equalsIgnoreCase(OrderConstants.PAYMENT_STATUS_APPROVED)) {
 				orders.setStatus(OrderConstants.ORDER_STATUS_COMPLETE);
 			}
+			SimpleDateFormat dt = new SimpleDateFormat("dd/MMM/yyyy HH:mm:ss");
+			Date date = new Date();
+			orders.setTimeplaced(dt.format(date));
 			orders = ordersRepository.save(orders);
 		} else {
 			Orders completedOrder = ordersRepository.findByUsersIdAndPaypalPaymentPaymentId(usersId,
@@ -173,7 +215,7 @@ public class OrdersServiceImpl implements OrdersService {
 	}
 
 	@Override
-	public Orders addItem(AddItemBean addItemBean, Long usersId, String currency) {
+	public Orders addItem(AddItemBean addItemBean, String usersId, String currency) {
 		Catentry catentry = catentryRepository.findByPartnumber(addItemBean.getPartnumber());
 		Orders orders = null;
 		if (null != catentry && null != usersId) {
@@ -183,7 +225,7 @@ public class OrdersServiceImpl implements OrdersService {
 				orders = new Orders();
 				orders.setUsersId(usersId);
 				orders.setOrdersId(UUID.randomUUID().toString());
-				orders.setStatus("P");
+				orders.setStatus(OrderConstants.ORDER_STATUS_PENDING);
 			} else {
 				items = orders.getItems();
 			}
@@ -274,7 +316,7 @@ public class OrdersServiceImpl implements OrdersService {
 	}
 
 	@Override
-	public Orders updateBasket(AddItemBean addItemBean, Long usersId, String currency) {
+	public Orders updateBasket(AddItemBean addItemBean, String usersId, String currency) {
 		Catentry catentry = catentryRepository.findByPartnumber(addItemBean.getPartnumber());
 		Orders orders = null;
 		if (null != catentry) {
@@ -311,7 +353,7 @@ public class OrdersServiceImpl implements OrdersService {
 	}
 
 	@Override
-	public Orders deleteItem(String partnumber, Long usersId, String currency) {
+	public Orders deleteItem(String partnumber, String usersId, String currency) {
 		Orders orders = getPendingOrderByUsersId(usersId);
 		List<Items> items = null;
 		Orders updatedOrders = new Orders();
@@ -341,5 +383,29 @@ public class OrdersServiceImpl implements OrdersService {
 	@Override
 	public Orders save(Orders orders) {
 		return ordersRepository.save(orders);
+	}
+
+	@Override
+	public String generateToken(String usersId) {
+		byte[] apiKeySecretBytes = DatatypeConverter.parseBase64Binary(securityConfiguration.getJwtSecret());
+		Key signingKey = new SecretKeySpec(apiKeySecretBytes, signatureAlgorithm.getJcaName());
+
+		String audience = securityConfiguration.getJwtAudience();
+		String token = Jwts.builder().setId(usersId).setIssuer("commerce").setSubject("GUESTUSER").setAudience(audience)
+				.setIssuedAt(new Date()).setExpiration(generateExpirationDate())
+				.claim(OrderConstants.JWT_CLAIM_USER_ID, usersId)
+				.claim(OrderConstants.JWT_CLAIM_REGISTER_TYPE, OrderConstants.USER_TYPE_GUEST)
+				.signWith(signatureAlgorithm, signingKey).compact();
+		return token;
+	}
+
+	public Date generateExpirationDate() {
+		long expiresIn = getExpiredIn();
+		Date date = new Date();
+		return new Date(date.getTime() + expiresIn * 1000);
+	}
+
+	public int getExpiredIn() {
+		return securityConfiguration.getJwtGuestExpirationTime();
 	}
 }

@@ -14,6 +14,9 @@ public class OrdersSecurityConfiguration {
 	@Value("${jwt.expiration.time}")
 	private int jwtExpirationTime;
 
+	@Value("${jwt.guest.expiration.time}")
+	private int jwtGuestExpirationTime;
+
 	@Value("${jwt.token.prefix}")
 	private String jwtTokenPrefix;
 
@@ -22,6 +25,9 @@ public class OrdersSecurityConfiguration {
 
 	@Value("${jwt.audience}")
 	private String jwtAudience;
+
+	@Value("${jwt.get.additem.url}")
+	private String jwtAddItemUrl;
 
 	public String getJwtSecret() {
 		return jwtSecret;
@@ -41,5 +47,13 @@ public class OrdersSecurityConfiguration {
 
 	public String getJwtAudience() {
 		return jwtAudience;
+	}
+
+	public int getJwtGuestExpirationTime() {
+		return jwtGuestExpirationTime;
+	}
+
+	public String getJwtAddItemUrl() {
+		return jwtAddItemUrl;
 	}
 }

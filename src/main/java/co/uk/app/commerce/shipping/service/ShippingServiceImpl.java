@@ -9,6 +9,7 @@ import co.uk.app.commerce.address.document.Address;
 import co.uk.app.commerce.order.constant.OrderConstants;
 import co.uk.app.commerce.order.document.Orders;
 import co.uk.app.commerce.order.repository.OrdersRepository;
+import co.uk.app.commerce.order.service.OrdersService;
 import co.uk.app.commerce.shipping.document.Shipping;
 import co.uk.app.commerce.shipping.repository.ShippingRepository;
 
@@ -19,7 +20,7 @@ public class ShippingServiceImpl implements ShippingService {
 	private ShippingRepository shippingRepository;
 
 	@Autowired
-	private OrdersRepository ordersRepository;
+	private OrdersService ordersService;
 
 	@Override
 	public Shipping save(Shipping shipping) {
@@ -40,9 +41,9 @@ public class ShippingServiceImpl implements ShippingService {
 	}
 
 	@Override
-	public List<Shipping> getActiveShippingForCurrentOrder(Long usersId) {
+	public List<Shipping> getActiveShippingForCurrentOrder(String usersId) {
 		String type = null;
-		Orders orders = ordersRepository.findByUsersIdAndStatus(usersId, OrderConstants.ORDER_STATUS_PENDING);
+		Orders orders = ordersService.getPendingOrderByUsersId(usersId);
 		if (null != orders) {
 			Address shippingAddress = orders.getShippingaddress();
 			if (null != shippingAddress) {
