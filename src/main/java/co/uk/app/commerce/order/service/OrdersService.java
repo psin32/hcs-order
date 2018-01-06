@@ -34,4 +34,6 @@ public interface OrdersService {
 	Orders confirmOrder(String usersId, OrderConfirmationBean orderConfirmationBean) throws OrdersApplicationException;
 
 	String generateToken(String usersId);
+	
+	Orders mergeOrders(String usersId, String guestUserId);
 }

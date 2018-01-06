@@ -408,4 +408,19 @@ public class OrdersServiceImpl implements OrdersService {
 	public int getExpiredIn() {
 		return securityConfiguration.getJwtGuestExpirationTime();
 	}
+
+	@Override
+	public Orders mergeOrders(String usersId, String guestUserId) {
+		Orders guestOrder = getPendingOrderByUsersId(guestUserId);
+		if (null != guestOrder && null != guestOrder.getItems() && guestOrder.getItems().size() > 0) {
+			guestOrder.getItems().stream().forEach(item -> {
+				AddItemBean addItemBean = new AddItemBean();
+				addItemBean.setPartnumber(item.getPartnumber());
+				addItemBean.setQuantity(item.getQuantity());
+				addItem(addItemBean, usersId, OrderConstants.CURRENCY_UK);
+			});
+		}
+		Orders orders = getPendingOrderByUsersId(usersId);
+		return orders;
+	}
 }

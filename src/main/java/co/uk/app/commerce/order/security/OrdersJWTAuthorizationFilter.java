@@ -60,6 +60,9 @@ public class OrdersJWTAuthorizationFilter extends BasicAuthenticationFilter {
 					.getWebApplicationContext(servletContext);
 			securityConfiguration = webApplicationContext.getBean(OrdersSecurityConfiguration.class);
 		}
+
+		String guestToken = request.getHeader(securityConfiguration.getJwtGuestTokenHeader());
+
 		String token = null;
 
 		String authHeader = request.getHeader(securityConfiguration.getJwtHeader());
@@ -68,17 +71,19 @@ public class OrdersJWTAuthorizationFilter extends BasicAuthenticationFilter {
 		}
 		if (token != null) {
 
-			Claims claims;
-			try {
-				claims = Jwts.parser()
-						.setSigningKey(DatatypeConverter.parseBase64Binary(securityConfiguration.getJwtSecret()))
-						.parseClaimsJws(token).getBody();
-			} catch (Exception e) {
-				claims = null;
-			}
+			Claims claims = getClaims(token);
 
 			if (null != claims) {
 				String user = claims.getSubject();
+
+				// Setting up guest user id for merge order.
+				if (null != guestToken) {
+					Claims guestClaims = getClaims(guestToken);
+					if (null != guestClaims) {
+						request.setAttribute(OrderConstants.REQUEST_HEADER_GUEST_USER_ID,
+								guestClaims.get(OrderConstants.JWT_CLAIM_USER_ID));
+					}
+				}
 
 				if (user != null) {
 					request.setAttribute(OrderConstants.REQUEST_HEADER_USER_ID,
@@ -91,5 +96,17 @@ public class OrdersJWTAuthorizationFilter extends BasicAuthenticationFilter {
 			return null;
 		}
 		return null;
+	}
+
+	private Claims getClaims(String token) {
+		Claims claims;
+		try {
+			claims = Jwts.parser()
+					.setSigningKey(DatatypeConverter.parseBase64Binary(securityConfiguration.getJwtSecret()))
+					.parseClaimsJws(token).getBody();
+		} catch (Exception e) {
+			claims = null;
+		}
+		return claims;
 	}
 }

@@ -5,6 +5,8 @@ public interface OrderConstants {
 	String ADDRESS_ACTIVE_STATUS = "P";
 
 	String REQUEST_HEADER_USER_ID = "USER_ID";
+	
+	String REQUEST_HEADER_GUEST_USER_ID = "GUEST_USER_ID";
 
 	String REQUEST_HEADER_REGISTER_TYPE = "REGISTER_TYPE";
 

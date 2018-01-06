@@ -30,7 +30,8 @@ public class BasketController {
 	@GetMapping
 	public @ResponseBody Orders getBasketByUserId(HttpServletRequest request, HttpServletResponse response) {
 		String usersId = String.valueOf(request.getAttribute(OrderConstants.REQUEST_HEADER_USER_ID));
-		Orders orders = ordersService.getPendingOrderByUsersId(usersId);
+		String guestUsersId = String.valueOf(request.getAttribute(OrderConstants.REQUEST_HEADER_GUEST_USER_ID));
+		Orders orders = ordersService.mergeOrders(usersId, guestUsersId);
 		String cookieValue = "0";
 		if (null != orders) {
 			cookieValue = String.valueOf(orders.getItems().stream().mapToInt(item -> item.getQuantity()).sum());

@@ -23,6 +23,9 @@ public class OrdersSecurityConfiguration {
 	@Value("${jwt.header}")
 	private String jwtHeader;
 
+	@Value("${jwt.guest.token.header}")
+	private String jwtGuestTokenHeader;
+
 	@Value("${jwt.audience}")
 	private String jwtAudience;
 
@@ -55,5 +58,9 @@ public class OrdersSecurityConfiguration {
 
 	public String getJwtAddItemUrl() {
 		return jwtAddItemUrl;
+	}
+
+	public String getJwtGuestTokenHeader() {
+		return jwtGuestTokenHeader;
 	}
 }
