@@ -18,7 +18,7 @@ import co.uk.app.commerce.shipping.document.Shipping;
 import co.uk.app.commerce.shipping.service.ShippingService;
 
 @RestController
-@RequestMapping("/api/shipping")
+@RequestMapping("/shipping")
 public class ShippingController {
 
 	@Autowired

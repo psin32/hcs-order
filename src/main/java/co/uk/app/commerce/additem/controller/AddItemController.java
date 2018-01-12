@@ -20,7 +20,7 @@ import co.uk.app.commerce.order.security.OrdersSecurityConfiguration;
 import co.uk.app.commerce.order.service.OrdersService;
 
 @RestController
-@RequestMapping("/api/item/add")
+@RequestMapping("/item/add")
 public class AddItemController {
 
 	@Autowired

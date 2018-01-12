@@ -21,7 +21,7 @@ import co.uk.app.commerce.order.document.Orders;
 import co.uk.app.commerce.order.service.OrdersService;
 
 @RestController
-@RequestMapping("/api/basket")
+@RequestMapping("/basket")
 public class BasketController {
 
 	@Autowired

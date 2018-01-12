@@ -11,9 +11,6 @@ public class OrdersSecurityConfiguration {
 	@Value("${jwt.secret}")
 	private String jwtSecret;
 
-	@Value("${jwt.expiration.time}")
-	private int jwtExpirationTime;
-
 	@Value("${jwt.guest.expiration.time}")
 	private int jwtGuestExpirationTime;
 
@@ -34,10 +31,6 @@ public class OrdersSecurityConfiguration {
 
 	public String getJwtSecret() {
 		return jwtSecret;
-	}
-
-	public int getJwtExpirationTime() {
-		return jwtExpirationTime;
 	}
 
 	public String getJwtTokenPrefix() {

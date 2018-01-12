@@ -2,6 +2,8 @@ package co.uk.app.commerce.order.service;
 
 import java.security.Key;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -401,8 +403,7 @@ public class OrdersServiceImpl implements OrdersService {
 
 	public Date generateExpirationDate() {
 		long expiresIn = getExpiredIn();
-		Date date = new Date();
-		return new Date(date.getTime() + expiresIn * 1000);
+		return Date.from(Instant.now().plus(expiresIn, ChronoUnit.DAYS));
 	}
 
 	public int getExpiredIn() {
