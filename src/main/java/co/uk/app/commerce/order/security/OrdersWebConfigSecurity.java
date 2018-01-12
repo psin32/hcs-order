@@ -18,6 +18,10 @@ public class OrdersWebConfigSecurity extends WebSecurityConfigurerAdapter {
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 		http.cors().and().csrf().disable().authorizeRequests()
+				.antMatchers("/swagger**").permitAll()
+				.antMatchers("/swagger-resources/**").permitAll()
+				.antMatchers("/webjars/**").permitAll()
+				.antMatchers("/v2/api-docs").permitAll()
 				.antMatchers(HttpMethod.PUT, securityConfiguration.getJwtAddItemUrl()).permitAll()
 				.anyRequest().authenticated().and()
 				.addFilter(new OrdersJWTAuthorizationFilter(authenticationManager()))
