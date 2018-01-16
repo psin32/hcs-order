@@ -2,7 +2,7 @@ package co.uk.app.commerce.order.bean;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-public class PayerBean {
+public class PaypalPayerBean {
 
 	@JsonIgnore
 	private String payerId;

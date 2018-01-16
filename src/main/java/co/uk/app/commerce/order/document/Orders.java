@@ -11,11 +11,17 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import co.uk.app.commerce.address.document.Address;
 import co.uk.app.commerce.basket.bean.Items;
 import co.uk.app.commerce.basket.bean.Promotion;
+import co.uk.app.commerce.order.bean.GlobalCollectResponse;
 import co.uk.app.commerce.order.bean.OrderType;
-import co.uk.app.commerce.order.bean.PaymentBean;
+import co.uk.app.commerce.order.bean.PaypalPaymentBean;
+import co.uk.app.commerce.order.bean.PaymentType;
 import co.uk.app.commerce.order.util.PriceFormattingUtil;
+import lombok.Getter;
+import lombok.Setter;
 
 @Document(collection = "orders")
+@Getter
+@Setter
 public class Orders {
 
 	@Id
@@ -55,159 +61,19 @@ public class Orders {
 
 	private List<Promotion> promotions;
 
-	private PaymentBean paypalPayment;
+	private PaymentType paymentType;
+
+	private PaypalPaymentBean paypalPayment;
+
+	private GlobalCollectResponse globalCollectPayment;
 
 	@CreatedDate
 	private Date createddate;
 
 	@LastModifiedDate
 	private Date updateddate;
-	
+
 	private String timeplaced;
-
-	public String getTimeplaced() {
-		return timeplaced;
-	}
-
-	public void setTimeplaced(String timeplaced) {
-		this.timeplaced = timeplaced;
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	public String getOrdersId() {
-		return ordersId;
-	}
-
-	public void setOrdersId(String ordersId) {
-		this.ordersId = ordersId;
-	}
-
-	public String getUsersId() {
-		return usersId;
-	}
-
-	public void setUsersId(String usersId) {
-		this.usersId = usersId;
-	}
-
-	public String getStatus() {
-		return status;
-	}
-
-	public void setStatus(String status) {
-		this.status = status;
-	}
-
-	public Address getShippingaddress() {
-		return shippingaddress;
-	}
-
-	public void setShippingaddress(Address shippingaddress) {
-		this.shippingaddress = shippingaddress;
-	}
-
-	public Address getBillingaddress() {
-		return billingaddress;
-	}
-
-	public void setBillingaddress(Address billingaddress) {
-		this.billingaddress = billingaddress;
-	}
-
-	public List<Items> getItems() {
-		return items;
-	}
-
-	public void setItems(List<Items> items) {
-		this.items = items;
-	}
-
-	public OrderType getOrdertype() {
-		return ordertype;
-	}
-
-	public void setOrdertype(OrderType ordertype) {
-		this.ordertype = ordertype;
-	}
-
-	public String getShippingmethod() {
-		return shippingmethod;
-	}
-
-	public void setShippingmethod(String shippingmethod) {
-		this.shippingmethod = shippingmethod;
-	}
-
-	public Double getShippingcharges() {
-		return shippingcharges;
-	}
-
-	public void setShippingcharges(Double shippingcharges) {
-		this.shippingcharges = shippingcharges;
-	}
-
-	public Double getSubtotal() {
-		return subtotal;
-	}
-
-	public void setSubtotal(Double subtotal) {
-		this.subtotal = subtotal;
-	}
-
-	public Double getTotaldiscount() {
-		return totaldiscount;
-	}
-
-	public void setTotaldiscount(Double totaldiscount) {
-		this.totaldiscount = totaldiscount;
-	}
-
-	public Double getOrdertotal() {
-		return ordertotal;
-	}
-
-	public void setOrdertotal(Double ordertotal) {
-		this.ordertotal = ordertotal;
-	}
-
-	public List<Promotion> getPromotions() {
-		return promotions;
-	}
-
-	public void setPromotions(List<Promotion> promotions) {
-		this.promotions = promotions;
-	}
-
-	public Date getCreateddate() {
-		return createddate;
-	}
-
-	public void setCreateddate(Date createddate) {
-		this.createddate = createddate;
-	}
-
-	public Date getUpdateddate() {
-		return updateddate;
-	}
-
-	public void setUpdateddate(Date updateddate) {
-		this.updateddate = updateddate;
-	}
-
-	public PaymentBean getPaypalPayment() {
-		return paypalPayment;
-	}
-
-	public void setPaypalPayment(PaymentBean paypalPayment) {
-		this.paypalPayment = paypalPayment;
-	}
 
 	public String getFormattedShippingcharges() {
 		formattedShippingcharges = PriceFormattingUtil.formatPriceAsString(this.shippingcharges);
@@ -228,15 +94,4 @@ public class Orders {
 		formattedOrdertotal = PriceFormattingUtil.formatPriceAsString(this.ordertotal);
 		return formattedOrdertotal;
 	}
-
-	@Override
-	public String toString() {
-		return "Orders [id=" + id + ", ordersId=" + ordersId + ", usersId=" + usersId + ", status=" + status
-				+ ", shippingaddress=" + shippingaddress + ", billingaddress=" + billingaddress + ", items=" + items
-				+ ", ordertype=" + ordertype + ", shippingmethod=" + shippingmethod + ", shippingcharges="
-				+ shippingcharges + ", subtotal=" + subtotal + ", totaldiscount=" + totaldiscount + ", ordertotal="
-				+ ordertotal + ", promotions=" + promotions + ", createddate=" + createddate + ", updateddate="
-				+ updateddate + "]";
-	}
-
 }

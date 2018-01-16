@@ -1,6 +1,6 @@
 package co.uk.app.commerce.order.bean;
 
-public class PayeeBean {
+public class PaypalPayeeBean {
 
 	private String email;
 

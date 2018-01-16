@@ -20,9 +20,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Component;
 
-import com.paypal.api.payments.Amount;
-import com.paypal.api.payments.Payment;
-
 import co.uk.app.commerce.additem.bean.AddItemBean;
 import co.uk.app.commerce.address.document.Address;
 import co.uk.app.commerce.basket.bean.Items;
@@ -30,18 +27,16 @@ import co.uk.app.commerce.catalog.bean.Image;
 import co.uk.app.commerce.catalog.bean.ListPrice;
 import co.uk.app.commerce.catalog.document.Catentry;
 import co.uk.app.commerce.catalog.repository.CatentryRepository;
-import co.uk.app.commerce.order.bean.OrderConfirmationBean;
+import co.uk.app.commerce.order.bean.GlobalCollectResponse;
 import co.uk.app.commerce.order.bean.OrderType;
-import co.uk.app.commerce.order.bean.PayeeBean;
-import co.uk.app.commerce.order.bean.PayerBean;
-import co.uk.app.commerce.order.bean.PaymentBean;
+import co.uk.app.commerce.order.bean.PaypalPayerBean;
+import co.uk.app.commerce.order.bean.PaypalPaymentBean;
+import co.uk.app.commerce.order.bean.PaypalResponseBean;
 import co.uk.app.commerce.order.constant.OrderConstants;
 import co.uk.app.commerce.order.document.Orders;
-import co.uk.app.commerce.order.exception.OrdersApplicationException;
 import co.uk.app.commerce.order.repository.OrdersRepository;
 import co.uk.app.commerce.order.security.OrdersSecurityConfiguration;
 import co.uk.app.commerce.order.util.PriceFormattingUtil;
-import co.uk.app.commerce.payment.service.PaymentService;
 import co.uk.app.commerce.shipping.document.Shipping;
 import co.uk.app.commerce.shipping.repository.ShippingRepository;
 import io.jsonwebtoken.Jwts;
@@ -58,9 +53,6 @@ public class OrdersServiceImpl implements OrdersService {
 
 	@Autowired
 	private CatentryRepository catentryRepository;
-
-	@Autowired
-	private PaymentService paymentService;
 
 	@Autowired
 	private OrdersSecurityConfiguration securityConfiguration;
@@ -144,76 +136,6 @@ public class OrdersServiceImpl implements OrdersService {
 			}
 		}
 		return updatedOrder;
-	}
-
-	@Override
-	public Orders confirmOrder(String usersId, OrderConfirmationBean orderConfirmationBean)
-			throws OrdersApplicationException {
-		Orders orders = getPendingOrderByUsersId(usersId);
-
-		if (null != orders) {
-			Payment paymentAfterGet = paymentService.getPaypalPaymentDetails(usersId,
-					orders.getPaypalPayment().getPaymentId());
-
-			Payment paymentAfterExecute = paymentService.executePayment(paymentAfterGet, orders);
-
-			PaymentBean paymentBean = orders.getPaypalPayment();
-			paymentBean.setPaymentId(paymentAfterExecute.getId());
-			paymentBean.setStatus(paymentAfterExecute.getState());
-			paymentBean.setIntent(paymentAfterExecute.getIntent());
-			paymentBean.setCreateTime(paymentAfterExecute.getCreateTime());
-			paymentBean.setUpdateTime(paymentAfterExecute.getUpdateTime());
-			paymentBean.setCartId(paymentAfterExecute.getCart());
-
-			if (null != paymentAfterExecute && null != paymentAfterExecute.getPayer()
-					&& null != paymentAfterExecute.getPayer().getPayerInfo()) {
-				PayerBean payerBean = new PayerBean();
-				payerBean.setEmail(paymentAfterExecute.getPayer().getPayerInfo().getEmail());
-				payerBean.setFirstname(paymentAfterExecute.getPayer().getPayerInfo().getFirstName());
-				payerBean.setLastname(paymentAfterExecute.getPayer().getPayerInfo().getLastName());
-				payerBean.setPayerId(paymentAfterExecute.getPayer().getPayerInfo().getPayerId());
-				payerBean.setStatus(paymentAfterExecute.getPayer().getStatus());
-
-				paymentBean.setPayer(payerBean);
-			}
-
-			if (null != paymentAfterExecute && null != paymentAfterExecute.getTransactions()) {
-				paymentAfterExecute.getTransactions().stream().forEach(transaction -> {
-					Amount amount = transaction.getAmount();
-					if (null != amount) {
-						paymentBean.setCurrency(amount.getCurrency());
-						paymentBean.setAmount(amount.getTotal());
-					}
-				});
-			}
-
-			if (null != paymentAfterExecute && null != paymentAfterExecute.getPayee()) {
-				PayeeBean payeeBean = new PayeeBean();
-				payeeBean.setEmail(paymentAfterExecute.getPayee().getEmail());
-				payeeBean.setMerchantId(paymentAfterExecute.getPayee().getMerchantId());
-
-				paymentBean.setPayee(payeeBean);
-			}
-
-			orders.setPaypalPayment(paymentBean);
-
-			if (null != paymentAfterExecute && null != paymentAfterExecute.getState()
-					&& paymentAfterExecute.getState().equalsIgnoreCase(OrderConstants.PAYMENT_STATUS_APPROVED)) {
-				orders.setStatus(OrderConstants.ORDER_STATUS_COMPLETE);
-			}
-			SimpleDateFormat dt = new SimpleDateFormat("dd/MMM/yyyy HH:mm:ss");
-			Date date = new Date();
-			orders.setTimeplaced(dt.format(date));
-			orders = ordersRepository.save(orders);
-		} else {
-			Orders completedOrder = ordersRepository.findByUsersIdAndPaypalPaymentPaymentId(usersId,
-					orderConfirmationBean.getPaymentId());
-			if (null != completedOrder
-					&& completedOrder.getStatus().equalsIgnoreCase(OrderConstants.ORDER_STATUS_COMPLETE)) {
-				return completedOrder;
-			}
-		}
-		return orders;
 	}
 
 	@Override
@@ -388,22 +310,37 @@ public class OrdersServiceImpl implements OrdersService {
 	}
 
 	@Override
-	public String generateToken(String usersId) {
+	public String generateToken(String usersId, String originatedBy, String registerType) {
 		byte[] apiKeySecretBytes = DatatypeConverter.parseBase64Binary(securityConfiguration.getJwtSecret());
 		Key signingKey = new SecretKeySpec(apiKeySecretBytes, signatureAlgorithm.getJcaName());
 
 		String audience = securityConfiguration.getJwtAudience();
-		String token = Jwts.builder().setId(usersId).setIssuer("commerce").setSubject("GUESTUSER").setAudience(audience)
-				.setIssuedAt(new Date()).setExpiration(generateExpirationDate())
-				.claim(OrderConstants.JWT_CLAIM_USER_ID, usersId)
-				.claim(OrderConstants.JWT_CLAIM_REGISTER_TYPE, OrderConstants.USER_TYPE_GUEST)
-				.signWith(signatureAlgorithm, signingKey).compact();
+
+		String subject = null;
+		Date expiryDate = null;
+		if (OrderConstants.USER_TYPE_REGISTER.equalsIgnoreCase(registerType)) {
+			subject = usersId;
+			expiryDate = generateExpirationDateForPayment();
+		} else {
+			registerType = OrderConstants.USER_TYPE_GUEST;
+			expiryDate = generateGuestExpirationDate();
+			subject = "GUESTUSER";
+		}
+		String token = Jwts.builder().setId(usersId).setIssuer("commerce").setSubject(subject).setAudience(audience)
+				.setIssuedAt(new Date()).setExpiration(expiryDate).claim(OrderConstants.JWT_CLAIM_USER_ID, usersId)
+				.claim(OrderConstants.JWT_CLAIM_REGISTER_TYPE, registerType)
+				.claim(OrderConstants.JWT_CLAIM_ORIGINATED_BY, originatedBy).signWith(signatureAlgorithm, signingKey)
+				.compact();
 		return token;
 	}
 
-	public Date generateExpirationDate() {
+	private Date generateGuestExpirationDate() {
 		long expiresIn = getExpiredIn();
 		return Date.from(Instant.now().plus(expiresIn, ChronoUnit.DAYS));
+	}
+
+	private Date generateExpirationDateForPayment() {
+		return Date.from(Instant.now().plus(1, ChronoUnit.MINUTES));
 	}
 
 	public int getExpiredIn() {
@@ -423,5 +360,61 @@ public class OrdersServiceImpl implements OrdersService {
 		}
 		Orders orders = getPendingOrderByUsersId(usersId);
 		return orders;
+	}
+
+	@Override
+	public Orders confirmPaypalOrder(Orders orders, PaypalResponseBean paypalResponseBean) {
+
+		if (paypalResponseBean.getState().equals(OrderConstants.PAYMENT_STATUS_APPROVED)) {
+			PaypalPaymentBean paypalPaymentBean = orders.getPaypalPayment();
+			paypalPaymentBean.setIntent(paypalResponseBean.getIntent());
+			paypalPaymentBean.setStatus(paypalResponseBean.getState());
+			paypalPaymentBean.setPaymentId(paypalResponseBean.getId());
+			paypalResponseBean.getTransactions().stream().forEach(transaction -> {
+				paypalPaymentBean.setAmount(transaction.getAmount().getTotal());
+				paypalPaymentBean.setCurrency(transaction.getAmount().getCurrency());
+			});
+
+			paypalPaymentBean.setCartId(paypalResponseBean.getCart());
+
+			PaypalPayerBean payerBean = new PaypalPayerBean();
+			payerBean.setEmail(paypalResponseBean.getPayer().getPayer_info().getEmail());
+			payerBean.setFirstname(paypalResponseBean.getPayer().getPayer_info().getFirst_name());
+			payerBean.setLastname(paypalResponseBean.getPayer().getPayer_info().getLast_name());
+			payerBean.setPayerId(paypalResponseBean.getPayer().getPayer_info().getPayer_id());
+			payerBean.setStatus(paypalResponseBean.getPayer().getStatus());
+
+			paypalPaymentBean.setPayer(payerBean);
+
+			orders.setPaypalPayment(paypalPaymentBean);
+			orders.setStatus(OrderConstants.ORDER_STATUS_COMPLETE);
+
+			SimpleDateFormat dt = new SimpleDateFormat("dd/MMM/yyyy HH:mm:ss");
+			Date date = new Date();
+			orders.setTimeplaced(dt.format(date));
+		}
+		return ordersRepository.save(orders);
+	}
+
+	@Override
+	public Orders confirmGlobalCollectOrder(Orders orders, GlobalCollectResponse globalCollectResponse) {
+
+		if (globalCollectResponse.getStatus().equalsIgnoreCase(OrderConstants.GLOBALCOLLECT_STATUS_PAYMENT_CREATED)) {
+			orders.setStatus(OrderConstants.ORDER_STATUS_COMPLETE);
+
+			GlobalCollectResponse globalCollectPayment = orders.getGlobalCollectPayment();
+			globalCollectPayment.setStatus(globalCollectResponse.getStatus());
+			globalCollectPayment.setAmount(globalCollectResponse.getAmount());
+			globalCollectPayment.setCardNumber(globalCollectResponse.getCardNumber());
+			globalCollectPayment.setCardType(globalCollectResponse.getCardType());
+			globalCollectPayment.setCurrency(globalCollectResponse.getCurrency());
+
+			orders.setGlobalCollectPayment(globalCollectPayment);
+
+			SimpleDateFormat dt = new SimpleDateFormat("dd/MMM/yyyy HH:mm:ss");
+			Date date = new Date();
+			orders.setTimeplaced(dt.format(date));
+		}
+		return ordersRepository.save(orders);
 	}
 }

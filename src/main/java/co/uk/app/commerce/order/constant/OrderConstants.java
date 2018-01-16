@@ -5,12 +5,16 @@ public interface OrderConstants {
 	String ADDRESS_ACTIVE_STATUS = "P";
 
 	String REQUEST_HEADER_USER_ID = "USER_ID";
-	
+
 	String REQUEST_HEADER_GUEST_USER_ID = "GUEST_USER_ID";
+	
+	String REQUEST_HEADER_ORIGINATED_BY = "ORIGINATED_BY";
 
 	String REQUEST_HEADER_REGISTER_TYPE = "REGISTER_TYPE";
 
 	String JWT_CLAIM_USER_ID = "userId";
+	
+	String JWT_CLAIM_ORIGINATED_BY = "originatedBy";
 
 	String JWT_CLAIM_REGISTER_TYPE = "registertype";
 
@@ -29,7 +33,7 @@ public interface OrderConstants {
 	String COOKIE_BASKET_COUNT = "BASKET_COUNT";
 
 	String COOKIE_TOKEN = "TOKEN";
-	
+
 	String COOKIE_REGISTER_TYPE = "REGISTER_TYPE";
 
 	String CURRENCY_UK = "GBP";
@@ -41,4 +45,10 @@ public interface OrderConstants {
 	String USER_TYPE_GUEST = "G";
 
 	String USER_TYPE_REGISTER = "R";
+
+	String GLOBALCOLLECT_STATUS_IN_PROGRESS = "IN_PROGRESS";
+
+	String GLOBALCOLLECT_STATUS_PAYMENT_CREATED = "PAYMENT_CREATED";
+	
+	String REQUEST_ORIGINATED_BY_ORDER_APPLICATION = "ORDER_APPLICATION";
 }

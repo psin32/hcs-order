@@ -47,7 +47,7 @@ public class AddItemController {
 
 			String authHeader = request.getHeader(securityConfiguration.getJwtHeader());
 			if (authHeader == null) {
-				String token = ordersService.generateToken(usersId);
+				String token = ordersService.generateToken(usersId, null, null);
 
 				Cookie tokenCookie = new Cookie(OrderConstants.COOKIE_TOKEN, token);
 				tokenCookie.setPath("/");
