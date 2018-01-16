@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 import co.uk.app.commerce.address.document.Address;
 import co.uk.app.commerce.order.constant.OrderConstants;
 import co.uk.app.commerce.order.document.Orders;
-import co.uk.app.commerce.order.repository.OrdersRepository;
 import co.uk.app.commerce.order.service.OrdersService;
 import co.uk.app.commerce.shipping.document.Shipping;
 import co.uk.app.commerce.shipping.repository.ShippingRepository;

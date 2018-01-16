@@ -271,6 +271,12 @@ public class OrdersController {
 						HttpMethod.POST, requestEntity, GlobalCollectResponse.class);
 				if (paymentResponse.getStatusCode() == HttpStatus.OK) {
 					GlobalCollectResponse globalCollectResponse = paymentResponse.getBody();
+					if (null != globalCollectResponse && (globalCollectResponse.getStatus()
+							.equalsIgnoreCase(OrderConstants.GLOBALCOLLECT_STATUS_PAYMENT_FAILED)
+							|| globalCollectResponse.getStatus()
+									.equalsIgnoreCase(OrderConstants.GLOBALCOLLECT_STATUS_IN_PROGRESS))) {
+						return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+					}
 					orders = ordersService.confirmGlobalCollectOrder(orders, globalCollectResponse);
 				} else {
 					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
