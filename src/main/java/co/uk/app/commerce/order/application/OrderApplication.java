@@ -9,7 +9,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -29,7 +28,6 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @EnableMongoRepositories(basePackages = { "co.uk.app.commerce.order", "co.uk.app.commerce.catalog",
 		"co.uk.app.commerce.basket", "co.uk.app.commerce.address", "co.uk.app.commerce.shipping",
 		"co.uk.app.commerce.summary" })
-@EnableMongoAuditing
 public class OrderApplication {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrderApplication.class);
